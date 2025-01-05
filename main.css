@@ -44,7 +44,7 @@ canvas {
   object-fit: cover;
   object-position: center;
   margin-bottom: 15px;
-  box-shadow: 0 0 0 4px white, 0 0 0 6px #ff3366;
+  box-shadow: 0 0 0 4px white, 0 0 0 6px gray;
 }
 
 h1 {
