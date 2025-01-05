@@ -10,16 +10,16 @@ const idleFOV = 30;
 
 let targetFOV = idleFOV;
 let targetZ = idleZ;
-const transitionSpeed = 0.01;
+const transitionSpeed = 0.03;
 
 const renderer = new THREE.WebGLRenderer({ antialias: true });
 renderer.setSize(window.innerWidth, window.innerHeight);
 document.body.insertBefore(renderer.domElement, document.body.firstChild);
 
-const ambientLight = new THREE.AmbientLight(0xffffff, 0.5);
+const ambientLight = new THREE.AmbientLight(0xffffff, 2);
 scene.add(ambientLight);
 const directionalLight = new THREE.DirectionalLight(0xffffff, 1);
-directionalLight.position.set(5, 5, 5);
+directionalLight.position.set(5, 4, 3);
 scene.add(directionalLight);
 
 const cubes = [];
