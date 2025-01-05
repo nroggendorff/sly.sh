@@ -8,101 +8,7 @@
       href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600&display=swap"
       rel="stylesheet"
     />
-    <style>
-      * {
-        margin: 0;
-        padding: 0;
-        box-sizing: border-box;
-      }
-
-      canvas {
-        position: fixed;
-        top: 0;
-        left: 0;
-        z-index: 0;
-      }
-
-      .profile-container {
-        position: fixed;
-        top: 0;
-        left: 0;
-        width: 100%;
-        height: 100%;
-        display: flex;
-        justify-content: center;
-        align-items: center;
-        z-index: 1;
-        pointer-events: none;
-        font-family: "Inter", Arial, sans-serif;
-        color: #333;
-      }
-
-      .container {
-        background-color: white;
-        padding: 30px;
-        border-radius: 15px;
-        text-align: center;
-        box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
-        max-width: 350px;
-        width: 100%;
-        transition: transform 0.3s ease;
-      }
-
-      .profile-image {
-        width: 120px;
-        height: 120px;
-        border-radius: 50%;
-        object-fit: cover;
-        object-position: center;
-        margin-bottom: 15px;
-        box-shadow: 0 0 0 4px white, 0 0 0 6px #ff3366;
-      }
-
-      h1 {
-        font-size: 1.8rem;
-        margin-bottom: 10px;
-        color: #ff3366;
-        font-weight: 600;
-      }
-
-      .bio {
-        color: #666;
-        margin-bottom: 20px;
-        font-weight: 300;
-      }
-
-      .social-links {
-        display: grid;
-        grid-template-columns: repeat(4, 1fr);
-        grid-gap: 15px;
-        pointer-events: auto;
-      }
-
-      .social-links a {
-        display: flex;
-        justify-content: center;
-        align-items: center;
-        background-color: #f4f4f4;
-        border-radius: 10px;
-        padding: 10px;
-        transition: all 0.3s ease;
-      }
-
-      .social-links a:hover {
-        background-color: #ff3366;
-        transform: scale(1.1);
-      }
-
-      .social-links a:hover img {
-        filter: brightness(0) invert(1);
-      }
-
-      .social-links img {
-        width: 30px;
-        height: 30px;
-        transition: all 0.3s ease;
-      }
-    </style>
+    <link rel="stylesheet" href="main.css" />
   </head>
   <body>
     <div class="profile-container">
@@ -111,36 +17,34 @@
         <h1>Noa Roggendorff</h1>
         <p class="bio">Dying out here</p>
         <div class="social-links">
-          <a
-            href="https://youtube.com/@noanoise?sub_confirmation=1"
-            target="_blank"
-            ><img src="img/youtube.png" alt="YouTube"
-          /></a>
+          <a href="https://youtube.com/@noanoise?sub_confirmation=1">
+            <img src="img/youtube.png" alt="YouTube" />
+          </a>
           <a
             href="https://open.spotify.com/artist/6dir0KuFGtM1MvPvkzpFN7?si=Y6W89Pq0R5aFTcvFy3q02w"
-            target="_blank"
-            ><img src="img/spotify.png" alt="Spotify"
-          /></a>
-          <a href="https://huggingface.co/nroggendorff" target="_blank"
-            ><img src="img/huggingface.png" alt="HuggingFace"
-          /></a>
-          <a href="https://instagram.com/noaroggendorff" target="_blank"
-            ><img src="img/instagram.png" alt="Instagram"
-          /></a>
+          >
+            <img src="img/spotify.png" alt="Spotify" />
+          </a>
+          <a href="https://huggingface.co/nroggendorff">
+            <img src="img/huggingface.png" alt="HuggingFace" />
+          </a>
+          <a href="https://instagram.com/noaroggendorff">
+            <img src="img/instagram.png" alt="Instagram" />
+          </a>
           <a
             href="https://music.apple.com/us/artist/noa-roggendorff/1693094164"
-            target="_blank"
-            ><img src="img/music.png" alt="Apple Music"
-          /></a>
-          <a href="https://github.com/nroggendorff" target="_blank"
-            ><img src="img/github.png" alt="GitHub"
-          /></a>
-          <a href="https://bsky.app/profile/sly.sh"
-            ><img src="img/bluesky.png" alt="BlueSky"
-          /></a>
-          <a href="https://twitter.com/noaroggendorff"
-            ><img src="img/twitter.png" alt="Twitter"
-          /></a>
+          >
+            <img src="img/music.png" alt="Apple Music" />
+          </a>
+          <a href="https://github.com/nroggendorff">
+            <img src="img/github.png" alt="GitHub" />
+          </a>
+          <a href="https://bsky.app/profile/sly.sh">
+            <img src="img/bluesky.png" alt="BlueSky" />
+          </a>
+          <a href="https://twitter.com/noaroggendorff">
+            <img src="img/twitter.png" alt="Twitter" />
+          </a>
         </div>
       </div>
     </div>

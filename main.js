@@ -30,24 +30,27 @@ const numCubes = gridRows * gridCols;
 const spacing = 7;
 const cube_scale = 3.5;
 
-for (let i = 0; i < numCubes; i++) {
+const createCube = (i) => {
   const geometry = new THREE.BoxGeometry(cube_scale, cube_scale, cube_scale);
-  const hue = i / numCubes;
-  const color = new THREE.Color().setHSL(hue, 1, 0.5);
+  const color = new THREE.Color().setHSL(i / numCubes, 1, 0.5);
   const material = new THREE.MeshPhongMaterial({
     color: color,
     shininess: 100,
   });
 
   const cube = new THREE.Mesh(geometry, material);
-
   const row = Math.floor(i / gridCols);
   const col = i % gridCols;
+
   cube.position.x = (col - (gridCols - 1) / 2) * spacing;
   cube.position.y = (row - (gridRows - 1) / 2) * spacing;
 
-  scene.add(cube);
+  return cube;
+};
 
+for (let i = 0; i < numCubes; i++) {
+  const cube = createCube(i);
+  scene.add(cube);
   cubes.push({
     mesh: cube,
     currentRotation: new THREE.Vector3(0, 0, -1),
@@ -61,20 +64,16 @@ let mousePosition = new THREE.Vector3(0, 0, 1);
 let globalDirection = new THREE.Vector3(0, 0, 1);
 let isWindowFocused = true;
 
-window.addEventListener("blur", () => {
-  isWindowFocused = false;
+const handleFocusChange = (focused) => {
+  isWindowFocused = focused;
+};
+
+["blur", "mouseleave"].forEach((event) => {
+  window.addEventListener(event, () => handleFocusChange(false));
 });
 
-window.addEventListener("focus", () => {
-  isWindowFocused = true;
-});
-
-document.addEventListener("mouseleave", () => {
-  isWindowFocused = false;
-});
-
-document.addEventListener("mouseenter", () => {
-  isWindowFocused = true;
+["focus", "mouseenter"].forEach((event) => {
+  window.addEventListener(event, () => handleFocusChange(true));
 });
 
 function updateMousePosition(event) {
@@ -86,17 +85,15 @@ function updateMousePosition(event) {
   globalDirection.set(x * 3, y * 3, 1).normalize();
 }
 
+const handleLinkHover = (isEntering) => {
+  isLinkHovered = isEntering;
+  targetFOV = isEntering ? 75 : idleFOV;
+  targetZ = isEntering ? 14 : idleZ;
+};
+
 document.querySelectorAll(".social-links a").forEach((link) => {
-  link.addEventListener("mouseenter", () => {
-    isLinkHovered = true;
-    targetFOV = 75;
-    targetZ = 14;
-  });
-  link.addEventListener("mouseleave", () => {
-    isLinkHovered = false;
-    targetFOV = idleFOV;
-    targetZ = idleZ;
-  });
+  link.addEventListener("mouseenter", () => handleLinkHover(true));
+  link.addEventListener("mouseleave", () => handleLinkHover(false));
 });
 
 document.addEventListener("mousemove", (event) => {
