@@ -5,7 +5,7 @@ const aspect = window.innerWidth / window.innerHeight;
 const camera = new THREE.PerspectiveCamera(35, aspect, 0.1, 1000);
 camera.position.z = 50;
 
-const idleZ = 50;
+const idleZ = 70;
 const idleFOV = 30;
 
 let targetFOV = idleFOV;
@@ -24,15 +24,15 @@ scene.add(directionalLight);
 
 const cubes = [];
 
-const gridRows = 6;
-const gridCols = 12;
+const gridRows = 7;
+const gridCols = 13;
 const numCubes = gridRows * gridCols;
 const spacing = 7;
-const cube_scale = 3.5;
+const cube_scale = 3;
 
 const createCube = (i) => {
   const geometry = new THREE.BoxGeometry(cube_scale, cube_scale, cube_scale);
-  const color = new THREE.Color().setHSL(i / numCubes, 1, 0.5);
+  const color = new THREE.Color().setHSL((i % gridCols) / gridCols, 1, 0.5);
   const material = new THREE.MeshPhongMaterial({
     color: color,
     shininess: 100,
@@ -63,17 +63,32 @@ let isLinkHovered = false;
 let mousePosition = new THREE.Vector3(0, 0, 1);
 let globalDirection = new THREE.Vector3(0, 0, 1);
 let isWindowFocused = true;
+let isMouseInWindow = true;
 
-const handleFocusChange = (focused) => {
-  isWindowFocused = focused;
+const resetCubes = () => {
+  targetFOV = idleFOV;
+  targetZ = idleZ;
+  mousePosition.set(0, 0, 1);
+  globalDirection.set(0, 0, 1);
+  isLinkHovered = false;
 };
 
-["blur", "mouseleave"].forEach((event) => {
-  window.addEventListener(event, () => handleFocusChange(false));
+window.addEventListener("blur", () => {
+  isWindowFocused = false;
+  resetCubes();
 });
 
-["focus", "mouseenter"].forEach((event) => {
-  window.addEventListener(event, () => handleFocusChange(true));
+window.addEventListener("focus", () => {
+  isWindowFocused = true;
+});
+
+document.addEventListener("mouseleave", () => {
+  isMouseInWindow = false;
+  resetCubes();
+});
+
+document.addEventListener("mouseenter", () => {
+  isMouseInWindow = true;
 });
 
 function updateMousePosition(event) {
@@ -97,6 +112,8 @@ document.querySelectorAll(".social-links a").forEach((link) => {
 });
 
 document.addEventListener("mousemove", (event) => {
+  if (!isWindowFocused) return;
+
   updateMousePosition(event);
 
   if (isLinkHovered) {
@@ -134,8 +151,8 @@ function animate() {
     (Math.tan((camera.fov * Math.PI) / 360) * camera.position.z) / 15;
 
   cubes.forEach((cube) => {
-    if (!isWindowFocused) {
-      cube.targetRotation.lerp(new THREE.Vector3(0, 0, 1), 0.05);
+    if (!isMouseInWindow || !isWindowFocused) {
+      cube.targetRotation.set(0, 0, 1);
     }
     cube.currentRotation.lerp(cube.targetRotation, cube.speed);
     cube.mesh.lookAt(cube.mesh.position.clone().add(cube.currentRotation));
@@ -143,6 +160,7 @@ function animate() {
     cube.mesh.scale.setScalar(scale);
   });
 
+  renderer.setClearColor(0xffffff, 0);
   renderer.render(scene, camera);
 }
 
