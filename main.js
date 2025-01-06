@@ -1,4 +1,5 @@
 import * as THREE from "three";
+import { GLTFLoader } from "three/examples/jsm/loaders/GLTFLoader.js";
 
 const scene = new THREE.Scene();
 const aspect = window.innerWidth / window.innerHeight;
@@ -13,6 +14,8 @@ let targetZ = idleZ;
 const transitionSpeed = 0.03;
 
 const renderer = new THREE.WebGLRenderer({ antialias: true });
+const loader = new GLTFLoader();
+
 renderer.setSize(window.innerWidth, window.innerHeight);
 document.body.insertBefore(renderer.domElement, document.body.firstChild);
 
@@ -28,10 +31,11 @@ const gridRows = 7;
 const gridCols = 13;
 const numCubes = gridRows * gridCols;
 const spacing = 7;
-const cube_scale = 3;
+const cube_scale = 2.2;
+
+let geometry;
 
 const createCube = (i) => {
-  const geometry = new THREE.BoxGeometry(cube_scale, cube_scale, cube_scale);
   const color = new THREE.Color().setHSL((i % gridCols) / gridCols, 1, 0.5);
   const material = new THREE.MeshPhongMaterial({
     color: color,
@@ -48,16 +52,24 @@ const createCube = (i) => {
   return cube;
 };
 
-for (let i = 0; i < numCubes; i++) {
-  const cube = createCube(i);
-  scene.add(cube);
-  cubes.push({
-    mesh: cube,
-    currentRotation: new THREE.Vector3(0, 0, -1),
-    targetRotation: new THREE.Vector3(0, 0, -1),
-    speed: 0.05 + (i / numCubes) * 0.1,
-  });
-}
+loader.load("img/box.glb", (gltf) => {
+  const mesh = gltf.scene.getObjectByProperty("type", "Mesh");
+  if (mesh) {
+    geometry = mesh.geometry.clone();
+    geometry.scale(cube_scale, cube_scale, cube_scale);
+
+    for (let i = 0; i < numCubes; i++) {
+      const cube = createCube(i);
+      scene.add(cube);
+      cubes.push({
+        mesh: cube,
+        currentRotation: new THREE.Vector3(0, 0, -1),
+        targetRotation: new THREE.Vector3(0, 0, -1),
+        speed: 0.05 + (i / numCubes) * 0.1,
+      });
+    }
+  }
+});
 
 let isLinkHovered = false;
 let mousePosition = new THREE.Vector3(0, 0, 1);
@@ -73,23 +85,20 @@ const resetCubes = () => {
   isLinkHovered = false;
 };
 
-window.addEventListener("blur", () => {
-  isWindowFocused = false;
-  resetCubes();
-});
+const handleWindowFocus = (isFocused) => {
+  isWindowFocused = isFocused;
+  if (!isFocused) resetCubes();
+};
 
-window.addEventListener("focus", () => {
-  isWindowFocused = true;
-});
+const handleMouseInWindow = (isInWindow) => {
+  isMouseInWindow = isInWindow;
+  if (!isInWindow) resetCubes();
+};
 
-document.addEventListener("mouseleave", () => {
-  isMouseInWindow = false;
-  resetCubes();
-});
-
-document.addEventListener("mouseenter", () => {
-  isMouseInWindow = true;
-});
+window.addEventListener("blur", () => handleWindowFocus(false));
+window.addEventListener("focus", () => handleWindowFocus(true));
+document.addEventListener("mouseleave", () => handleMouseInWindow(false));
+document.addEventListener("mouseenter", () => handleMouseInWindow(true));
 
 function updateMousePosition(event) {
   const x = (event.clientX / window.innerWidth) * 2 - 1;
@@ -140,6 +149,26 @@ window.addEventListener("resize", () => {
   renderer.setSize(width, height);
 });
 
+function updateCubes() {
+  const scale =
+    (Math.tan((camera.fov * Math.PI) / 360) * camera.position.z) / 15;
+
+  cubes.forEach((cube) => {
+    const shouldReset = !isMouseInWindow || !isWindowFocused;
+    cube.targetRotation = shouldReset
+      ? new THREE.Vector3(0, 0, 1)
+      : isLinkHovered
+      ? new THREE.Vector3()
+          .subVectors(mousePosition, cube.mesh.position)
+          .normalize()
+      : globalDirection;
+
+    cube.currentRotation.lerp(cube.targetRotation, cube.speed);
+    cube.mesh.lookAt(cube.mesh.position.clone().add(cube.currentRotation));
+    cube.mesh.scale.setScalar(scale);
+  });
+}
+
 function animate() {
   requestAnimationFrame(animate);
 
@@ -147,18 +176,7 @@ function animate() {
   camera.fov += (targetFOV - camera.fov) * transitionSpeed;
   camera.updateProjectionMatrix();
 
-  const scale =
-    (Math.tan((camera.fov * Math.PI) / 360) * camera.position.z) / 15;
-
-  cubes.forEach((cube) => {
-    if (!isMouseInWindow || !isWindowFocused) {
-      cube.targetRotation.set(0, 0, 1);
-    }
-    cube.currentRotation.lerp(cube.targetRotation, cube.speed);
-    cube.mesh.lookAt(cube.mesh.position.clone().add(cube.currentRotation));
-
-    cube.mesh.scale.setScalar(scale);
-  });
+  updateCubes();
 
   renderer.setClearColor(0xffffff, 0);
   renderer.render(scene, camera);
