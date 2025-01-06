@@ -52,7 +52,7 @@ const createCube = (i) => {
   return cube;
 };
 
-loader.load("img/box.glb", (gltf) => {
+loader.load("assets/box.glb", (gltf) => {
   const mesh = gltf.scene.getObjectByProperty("type", "Mesh");
   if (mesh) {
     geometry = mesh.geometry.clone();
