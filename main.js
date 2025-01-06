@@ -31,7 +31,7 @@ const gridRows = 7;
 const gridCols = 13;
 const numCubes = gridRows * gridCols;
 const spacing = 7;
-const cube_scale = 3;
+const cube_scale = 4;
 
 let geometry;
 
@@ -152,6 +152,7 @@ window.addEventListener("resize", () => {
 function updateCubes() {
   const scale =
     (Math.tan((camera.fov * Math.PI) / 360) * camera.position.z) / 15;
+  const forwardVector = new THREE.Vector3(0, 0, 1);
 
   cubes.forEach((cube) => {
     const shouldReset = !isMouseInWindow || !isWindowFocused;
@@ -165,7 +166,11 @@ function updateCubes() {
 
     cube.currentRotation.lerp(cube.targetRotation, cube.speed);
     cube.mesh.lookAt(cube.mesh.position.clone().add(cube.currentRotation));
-    cube.mesh.scale.setScalar(scale);
+
+    const angle = cube.currentRotation.angleTo(forwardVector);
+    const zScale = 1 + Math.min(1, angle / (Math.PI * 0.5));
+
+    cube.mesh.scale.set(scale, scale, scale * zScale);
   });
 }
 
