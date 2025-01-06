@@ -31,7 +31,7 @@ const gridRows = 7;
 const gridCols = 13;
 const numCubes = gridRows * gridCols;
 const spacing = 7;
-const cube_scale = 2.2;
+const cube_scale = 3;
 
 let geometry;
 
