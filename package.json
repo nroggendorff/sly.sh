@@ -8,8 +8,8 @@
     "dev": "vite --host",
     "build": "vite build",
     "deploy": "gh-pages -d dist",
-    "prepare": "sed -i 's/\\/assets/assets/g' dist/index.html && cp assets/box.glb dist/assets/box.glb",
-    "ship": "vite build && npm run prepare && gh-pages -d dist"
+    "prepare": "sed -i 's/\\/assets/assets/g' dist/index.html && cp assets/box.glb dist/assets/box.glb && echo sly.sh > dist/CNAME",
+    "ship": "npm run build && npm run prepare && npm run deploy"
   },
   "keywords": [],
   "author": "",
