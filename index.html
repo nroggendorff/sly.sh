@@ -76,6 +76,17 @@
             <img src="assets/twitter.png" alt="Twitter" />
           </a>
         </div>
+
+        <script type="text/javascript">
+          function checkBioChange() {
+            const bio = document.querySelector(".bio");
+            if (Math.random() * 100 <= 2) {
+              bio.innerHTML = "Esmy still lingers in my dreams.";
+            }
+          }
+
+          window.addEventListener("load", checkBioChange);
+        </script>
       </div>
     </div>
     <script type="module" src="/main.js"></script>
