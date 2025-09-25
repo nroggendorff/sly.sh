@@ -2,40 +2,461 @@
 <html lang="en">
   <head>
     <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>Status - sly.sh</title>
     <link rel="icon" type="image/x-icon" href="../assets/favicon.png" />
-    <link rel="stylesheet" href="main.css" />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap"
+      rel="stylesheet"
+    />
+    <style>
+      :root {
+        --bg-primary: #0a0a0f;
+        --bg-secondary: #1a1a24;
+        --bg-tertiary: #242438;
+        --text-primary: #ffffff;
+        --text-secondary: #a1a1aa;
+        --text-muted: #71717a;
+        --accent-success: #10b981;
+        --accent-warning: #f59e0b;
+        --accent-error: #ef4444;
+        --border-primary: rgba(255, 255, 255, 0.08);
+        --border-secondary: rgba(255, 255, 255, 0.04);
+        --shadow-lg: 0 20px 25px -5px rgba(0, 0, 0, 0.3),
+          0 10px 10px -5px rgba(0, 0, 0, 0.2);
+        --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.3),
+          0 2px 4px -1px rgba(0, 0, 0, 0.2);
+      }
+
+      * {
+        box-sizing: border-box;
+      }
+
+      body {
+        margin: 0;
+        font-family: "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI",
+          system-ui, sans-serif;
+        background: linear-gradient(135deg, var(--bg-primary) 0%, #0f0f1a 100%);
+        color: var(--text-primary);
+        line-height: 1.6;
+        min-height: 100vh;
+        -webkit-font-smoothing: antialiased;
+        -moz-osx-font-smoothing: grayscale;
+      }
+
+      .page {
+        min-height: 100vh;
+        padding: 2rem 1rem;
+        background: radial-gradient(
+            circle at 20% 20%,
+            rgba(16, 185, 129, 0.05) 0%,
+            transparent 50%
+          ),
+          radial-gradient(
+            circle at 80% 80%,
+            rgba(239, 68, 68, 0.03) 0%,
+            transparent 50%
+          );
+      }
+
+      .container {
+        max-width: 920px;
+        margin: 0 auto;
+      }
+
+      .status-banner {
+        display: flex;
+        align-items: center;
+        gap: 16px;
+        padding: 20px 24px;
+        border-radius: 16px;
+        background: var(--bg-secondary);
+        border: 1px solid var(--border-primary);
+        box-shadow: var(--shadow-lg);
+        margin-bottom: 32px;
+        backdrop-filter: blur(10px);
+        transition: all 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+        position: relative;
+        overflow: hidden;
+      }
+
+      .status-banner::before {
+        content: "";
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        height: 1px;
+        background: linear-gradient(
+          90deg,
+          transparent,
+          rgba(255, 255, 255, 0.1),
+          transparent
+        );
+      }
+
+      .status-banner.pending {
+        border-color: rgba(245, 158, 11, 0.3);
+        background: linear-gradient(
+          135deg,
+          var(--bg-secondary) 0%,
+          rgba(245, 158, 11, 0.05) 100%
+        );
+      }
+
+      .status-banner.up {
+        border-color: rgba(16, 185, 129, 0.3);
+        background: linear-gradient(
+          135deg,
+          var(--bg-secondary) 0%,
+          rgba(16, 185, 129, 0.05) 100%
+        );
+      }
+
+      .status-banner.down {
+        border-color: rgba(239, 68, 68, 0.3);
+        background: linear-gradient(
+          135deg,
+          var(--bg-secondary) 0%,
+          rgba(239, 68, 68, 0.05) 100%
+        );
+      }
+
+      .status-icon {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        width: 48px;
+        height: 48px;
+        border-radius: 50%;
+        background: var(--bg-tertiary);
+        border: 1px solid var(--border-primary);
+        transition: all 0.5s ease;
+        flex-shrink: 0;
+      }
+
+      .status-banner.pending .status-icon {
+        background: rgba(245, 158, 11, 0.1);
+        border-color: rgba(245, 158, 11, 0.3);
+        box-shadow: 0 0 20px rgba(245, 158, 11, 0.1);
+      }
+
+      .status-banner.up .status-icon {
+        background: rgba(16, 185, 129, 0.1);
+        border-color: rgba(16, 185, 129, 0.3);
+        box-shadow: 0 0 20px rgba(16, 185, 129, 0.1);
+      }
+
+      .status-banner.down .status-icon {
+        background: rgba(239, 68, 68, 0.1);
+        border-color: rgba(239, 68, 68, 0.3);
+        box-shadow: 0 0 20px rgba(239, 68, 68, 0.1);
+      }
+
+      .status-icon svg {
+        width: 20px;
+        height: 20px;
+        transition: all 0.5s ease;
+      }
+
+      .banner-content {
+        flex: 1;
+      }
+
+      .banner-title {
+        margin: 0 0 4px 0;
+        font-size: 1.125rem;
+        font-weight: 600;
+        color: var(--text-primary);
+      }
+
+      .banner-subtitle {
+        margin: 0;
+        font-size: 0.875rem;
+        color: var(--text-secondary);
+      }
+
+      .status-banner.pending .banner-title {
+        color: var(--accent-warning);
+      }
+
+      .status-banner.up .banner-title {
+        color: var(--accent-success);
+      }
+
+      .status-banner.down .banner-title {
+        color: var(--accent-error);
+      }
+
+      main {
+        margin-bottom: 4rem;
+      }
+
+      h1 {
+        font-size: 2.5rem;
+        font-weight: 700;
+        margin: 0 0 8px 0;
+        background: linear-gradient(
+          135deg,
+          var(--text-primary) 0%,
+          var(--text-secondary) 100%
+        );
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        background-clip: text;
+      }
+
+      .subtitle {
+        color: var(--text-secondary);
+        font-size: 1.125rem;
+        margin-bottom: 3rem;
+        font-weight: 300;
+      }
+
+      section {
+        margin-bottom: 3rem;
+      }
+
+      h2 {
+        font-size: 1.5rem;
+        font-weight: 600;
+        margin: 0 0 1.5rem 0;
+        color: var(--text-primary);
+        display: flex;
+        align-items: center;
+        gap: 12px;
+      }
+
+      h2::before {
+        content: "";
+        width: 4px;
+        height: 24px;
+        background: linear-gradient(
+          135deg,
+          var(--accent-success),
+          var(--accent-warning)
+        );
+        border-radius: 2px;
+      }
+
+      .component-list {
+        display: grid;
+        gap: 16px;
+      }
+
+      .component {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 20px;
+        border-radius: 12px;
+        background: var(--bg-secondary);
+        border: 1px solid var(--border-secondary);
+        box-shadow: var(--shadow-md);
+        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        position: relative;
+        overflow: hidden;
+      }
+
+      .component::before {
+        content: "";
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        height: 1px;
+        background: linear-gradient(
+          90deg,
+          transparent,
+          rgba(255, 255, 255, 0.05),
+          transparent
+        );
+      }
+
+      .component:hover {
+        transform: translateY(-2px);
+        box-shadow: var(--shadow-lg);
+        border-color: var(--border-primary);
+      }
+
+      .component-info {
+        flex: 1;
+      }
+
+      .component-info h3 {
+        margin: 0 0 4px 0;
+        font-size: 1rem;
+        font-weight: 600;
+        color: var(--text-primary);
+      }
+
+      .component-info p {
+        margin: 0 0 8px 0;
+        font-size: 0.875rem;
+        color: var(--text-secondary);
+      }
+
+      .component-info a {
+        color: #60a5fa;
+        font-size: 0.8125rem;
+        text-decoration: none;
+        font-weight: 500;
+        transition: color 0.2s ease;
+      }
+
+      .component-info a:hover {
+        color: #93c5fd;
+        text-decoration: underline;
+      }
+
+      .status-badge {
+        padding: 8px 16px;
+        border-radius: 20px;
+        font-weight: 600;
+        font-size: 0.8125rem;
+        text-transform: uppercase;
+        letter-spacing: 0.025em;
+        transition: all 0.3s ease;
+        border: 1px solid transparent;
+        flex-shrink: 0;
+      }
+
+      .status-badge.unknown {
+        background: var(--bg-tertiary);
+        color: var(--text-muted);
+        border-color: var(--border-secondary);
+      }
+
+      .status-badge.up {
+        background: rgba(16, 185, 129, 0.1);
+        color: var(--accent-success);
+        border-color: rgba(16, 185, 129, 0.2);
+      }
+
+      .status-badge.down {
+        background: rgba(239, 68, 68, 0.1);
+        color: var(--accent-error);
+        border-color: rgba(239, 68, 68, 0.2);
+      }
+
+      footer {
+        margin-top: 4rem;
+        padding-top: 2rem;
+        border-top: 1px solid var(--border-secondary);
+        text-align: center;
+        color: var(--text-muted);
+        font-size: 0.875rem;
+      }
+
+      .spinner {
+        width: 16px;
+        height: 16px;
+        border: 2px solid var(--border-secondary);
+        border-top: 2px solid var(--accent-warning);
+        border-radius: 50%;
+        animation: spin 0.8s linear infinite;
+        margin-right: 8px;
+      }
+
+      @keyframes spin {
+        0% {
+          transform: rotate(0deg);
+        }
+        100% {
+          transform: rotate(360deg);
+        }
+      }
+
+      @keyframes pulse {
+        0%,
+        100% {
+          opacity: 1;
+        }
+        50% {
+          opacity: 0.5;
+        }
+      }
+
+      .pulse {
+        animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+      }
+
+      @media (max-width: 768px) {
+        .page {
+          padding: 1rem;
+        }
+
+        h1 {
+          font-size: 2rem;
+        }
+
+        .status-banner {
+          padding: 16px;
+          gap: 12px;
+        }
+
+        .status-icon {
+          width: 40px;
+          height: 40px;
+        }
+
+        .status-icon svg {
+          width: 16px;
+          height: 16px;
+        }
+
+        .component {
+          flex-direction: column;
+          align-items: flex-start;
+          gap: 12px;
+        }
+
+        .component-info {
+          width: 100%;
+        }
+
+        .status-badge {
+          align-self: flex-end;
+        }
+      }
+
+      @media (max-width: 480px) {
+        .status-banner {
+          flex-direction: column;
+          text-align: center;
+        }
+
+        h2 {
+          font-size: 1.25rem;
+        }
+      }
+    </style>
   </head>
   <body>
     <div class="page">
       <div class="container">
         <div
-          class="status-banner up"
+          class="status-banner pending"
           id="globalBanner"
           role="status"
           aria-live="polite"
         >
-          <span class="icon" aria-hidden="true">
-            <svg
-              viewBox="0 0 24 24"
-              width="14"
-              height="14"
-              fill="none"
-              stroke="white"
-              stroke-width="2"
-              stroke-linecap="round"
-              stroke-linejoin="round"
-            >
-              <path d="M20 6L9 17l-5-5"></path>
-            </svg>
-          </span>
-          <p class="banner-text">All systems are operational.</p>
+          <div class="status-icon">
+            <div class="spinner"></div>
+          </div>
+          <div class="banner-content">
+            <div class="banner-title">Checking Systems</div>
+            <div class="banner-subtitle">
+              Running diagnostics on all services...
+            </div>
+          </div>
         </div>
 
         <main>
-          <h1>sly.sh Status</h1>
-          <p class="subtitle">System status for social links and assets</p>
+          <h1>System Status</h1>
+          <p class="subtitle">
+            Real-time monitoring for sly.sh services and assets
+          </p>
 
           <section>
             <h2>Social Links</h2>
@@ -44,133 +465,141 @@
                 class="component"
                 data-url="https://youtube.com/@noanoise?sub_confirmation=1"
               >
-                <div class="info">
+                <div class="component-info">
                   <h3>YouTube</h3>
-                  <p>Main channel</p>
+                  <p>Main channel and content hub</p>
                   <a
                     href="https://youtube.com/@noanoise?sub_confirmation=1"
                     target="_blank"
                     rel="noopener"
-                    >View Details</a
                   >
+                    View Channel →
+                  </a>
                 </div>
-                <span class="status unknown">Checking...</span>
+                <span class="status-badge unknown">Checking</span>
               </div>
 
               <div
                 class="component"
                 data-url="https://hf.co/spaces/nroggendorff/nroggendorff"
               >
-                <div class="info">
+                <div class="component-info">
                   <h3>Hugging Face</h3>
-                  <p>Model space</p>
+                  <p>AI model deployment space</p>
                   <a
                     href="https://hf.co/spaces/nroggendorff/nroggendorff"
                     target="_blank"
                     rel="noopener"
-                    >View Details</a
                   >
+                    View Space →
+                  </a>
                 </div>
-                <span class="status unknown">Checking...</span>
+                <span class="status-badge unknown">Checking</span>
               </div>
 
               <div
                 class="component"
                 data-url="https://open.spotify.com/artist/6dir0KuFGtM1MvPvkzpFN7"
               >
-                <div class="info">
+                <div class="component-info">
                   <h3>Spotify</h3>
-                  <p>Artist page</p>
+                  <p>Music streaming and artist profile</p>
                   <a
                     href="https://open.spotify.com/artist/6dir0KuFGtM1MvPvkzpFN7"
                     target="_blank"
                     rel="noopener"
-                    >View Details</a
                   >
+                    Listen Now →
+                  </a>
                 </div>
-                <span class="status unknown">Checking...</span>
+                <span class="status-badge unknown">Checking</span>
               </div>
 
               <div
                 class="component"
                 data-url="https://instagram.com/noaroggendorff"
               >
-                <div class="info">
+                <div class="component-info">
                   <h3>Instagram</h3>
-                  <p>Official account</p>
+                  <p>Visual content and updates</p>
                   <a
                     href="https://instagram.com/noaroggendorff"
                     target="_blank"
                     rel="noopener"
-                    >View Details</a
                   >
+                    Follow →
+                  </a>
                 </div>
-                <span class="status unknown">Checking...</span>
+                <span class="status-badge unknown">Checking</span>
               </div>
 
               <div
                 class="component"
                 data-url="https://music.apple.com/us/artist/noa-roggendorff/1693094164"
               >
-                <div class="info">
+                <div class="component-info">
                   <h3>Apple Music</h3>
-                  <p>Artist page</p>
+                  <p>Music streaming service</p>
                   <a
                     href="https://music.apple.com/us/artist/noa-roggendorff/1693094164"
                     target="_blank"
                     rel="noopener"
-                    >View Details</a
                   >
+                    Listen →
+                  </a>
                 </div>
-                <span class="status unknown">Checking...</span>
+                <span class="status-badge unknown">Checking</span>
               </div>
 
               <div class="component" data-url="https://bsky.app/profile/sly.sh">
-                <div class="info">
+                <div class="component-info">
                   <h3>BlueSky</h3>
-                  <p>Social profile</p>
+                  <p>Social networking and updates</p>
                   <a
                     href="https://bsky.app/profile/sly.sh"
                     target="_blank"
                     rel="noopener"
-                    >View Details</a
                   >
+                    Follow →
+                  </a>
                 </div>
-                <span class="status unknown">Checking...</span>
+                <span class="status-badge unknown">Checking</span>
               </div>
 
               <div
                 class="component"
                 data-url="https://github.com/nroggendorff/sly.sh"
               >
-                <div class="info">
+                <div class="component-info">
                   <h3>GitHub</h3>
-                  <p>Source repository</p>
+                  <p>Source code repository</p>
                   <a
                     href="https://github.com/nroggendorff/sly.sh"
                     target="_blank"
                     rel="noopener"
-                    >View Details</a
                   >
+                    View Code →
+                  </a>
                 </div>
-                <span class="status unknown">Checking...</span>
+                <span class="status-badge unknown">Checking</span>
               </div>
 
               <div
                 class="component"
                 data-url="https://twitter.com/noaroggendorff"
               >
-                <div class="info">
+                <div class="component-info">
                   <h3>Twitter</h3>
-                  <p>Official feed</p>
+                  <p>Microblogging platform</p>
                   <a
                     href="https://twitter.com/noaroggendorff"
                     target="_blank"
                     rel="noopener"
-                    >View Details</a
                   >
+                    Follow →
+                  </a>
                 </div>
-                <span class="status unknown">Checking...</span>
+                <span class="status-badge unknown">Checking</span>
               </div>
             </div>
           </section>
@@ -179,141 +608,181 @@
             <h2>Assets</h2>
             <div class="component-list">
               <div class="component" data-url="../assets/favicon.png">
-                <div class="info">
+                <div class="component-info">
                   <h3>Favicon</h3>
-                  <p>Browser icon</p>
+                  <p>Site icon displayed in browser tabs</p>
                   <a href="../assets/favicon.png" target="_blank" rel="noopener"
-                    >View Details</a
+                    >View Asset →</a
                   >
                 </div>
-                <span class="status unknown">Checking...</span>
+                <span class="status-badge unknown">Checking</span>
               </div>
 
               <div class="component" data-url="../assets/user.png">
-                <div class="info">
+                <div class="component-info">
                   <h3>Profile Image</h3>
-                  <p>Used on homepage</p>
+                  <p>Main profile picture on homepage</p>
                   <a href="../assets/user.png" target="_blank" rel="noopener"
-                    >View Details</a
+                    >View Asset →</a
                   >
                 </div>
-                <span class="status unknown">Checking...</span>
-              </div>
-
-              <div class="component" data-url="../assets/youtube.png">
-                <div class="info">
-                  <h3>YouTube Icon</h3>
-                  <p>Used in index.html</p>
-                  <a href="../assets/youtube.png" target="_blank" rel="noopener"
-                    >View Details</a
-                  >
-                </div>
-                <span class="status unknown">Checking...</span>
-              </div>
-
-              <div class="component" data-url="../assets/huggingface.png">
-                <div class="info">
-                  <h3>Hugging Face Icon</h3>
-                  <p>Used in index.html</p>
-                  <a
-                    href="../assets/huggingface.png"
-                    target="_blank"
-                    rel="noopener"
-                    >View Details</a
-                  >
-                </div>
-                <span class="status unknown">Checking...</span>
-              </div>
-
-              <div class="component" data-url="../assets/spotify.png">
-                <div class="info">
-                  <h3>Spotify Icon</h3>
-                  <p>Used in index.html</p>
-                  <a href="../assets/spotify.png" target="_blank" rel="noopener"
-                    >View Details</a
-                  >
-                </div>
-                <span class="status unknown">Checking...</span>
-              </div>
-
-              <div class="component" data-url="../assets/instagram.png">
-                <div class="info">
-                  <h3>Instagram Icon</h3>
-                  <p>Used in index.html</p>
-                  <a
-                    href="../assets/instagram.png"
-                    target="_blank"
-                    rel="noopener"
-                    >View Details</a
-                  >
-                </div>
-                <span class="status unknown">Checking...</span>
-              </div>
-
-              <div class="component" data-url="../assets/music.png">
-                <div class="info">
-                  <h3>Apple Music Icon</h3>
-                  <p>Used in index.html</p>
-                  <a href="../assets/music.png" target="_blank" rel="noopener"
-                    >View Details</a
-                  >
-                </div>
-                <span class="status unknown">Checking...</span>
-              </div>
-
-              <div class="component" data-url="../assets/bluesky.png">
-                <div class="info">
-                  <h3>BlueSky Icon</h3>
-                  <p>Used in index.html</p>
-                  <a href="../assets/bluesky.png" target="_blank" rel="noopener"
-                    >View Details</a
-                  >
-                </div>
-                <span class="status unknown">Checking...</span>
-              </div>
-
-              <div class="component" data-url="../assets/github.png">
-                <div class="info">
-                  <h3>GitHub Icon</h3>
-                  <p>Used in index.html</p>
-                  <a href="../assets/github.png" target="_blank" rel="noopener"
-                    >View Details</a
-                  >
-                </div>
-                <span class="status unknown">Checking...</span>
-              </div>
-
-              <div class="component" data-url="../assets/twitter.png">
-                <div class="info">
-                  <h3>Twitter Icon</h3>
-                  <p>Used in index.html</p>
-                  <a href="../assets/twitter.png" target="_blank" rel="noopener"
-                    >View Details</a
-                  >
-                </div>
-                <span class="status unknown">Checking...</span>
+                <span class="status-badge unknown">Checking</span>
               </div>
 
               <div class="component" data-url="../assets/box.glb">
-                <div class="info">
+                <div class="component-info">
                   <h3>3D Model</h3>
-                  <p>Used in background cubes</p>
+                  <p>Interactive cube geometry for background</p>
                   <a href="../assets/box.glb" target="_blank" rel="noopener"
-                    >View Details</a
+                    >View Asset →</a
                   >
                 </div>
-                <span class="status unknown">Checking...</span>
+                <span class="status-badge unknown">Checking</span>
+              </div>
+
+              <div class="component" data-url="../assets/youtube.png">
+                <div class="component-info">
+                  <h3>Social Icons</h3>
+                  <p>Platform icons used in navigation</p>
+                  <a href="../assets/youtube.png" target="_blank" rel="noopener"
+                    >View Sample →</a
+                  >
+                </div>
+                <span class="status-badge unknown">Checking</span>
               </div>
             </div>
           </section>
         </main>
 
         <footer>
-          <p>Generated from sly.sh index.html · MIT License</p>
+          <p>
+            Automated monitoring for sly.sh •
+            <a
+              href="https://github.com/nroggendorff/sly.sh"
+              style="color: #60a5fa"
+              >Source Code</a
+            >
+            • MIT License
+          </p>
         </footer>
       </div>
     </div>
 
-    <script src="main.js"></script>
+    <script>
+      const DEFAULT_TIMEOUT = 8000;
+      const CHECK_INTERVAL = 5 * 60 * 1000;
+
+      function fetchWithTimeout(url, options = {}, timeout = DEFAULT_TIMEOUT) {
+        const controller = new AbortController();
+        const timeoutId = setTimeout(() => controller.abort(), timeout);
+
+        return fetch(url, {
+          signal: controller.signal,
+          ...options,
+        }).finally(() => clearTimeout(timeoutId));
+      }
+
+      async function checkStatus(url) {
+        const methods = [
+          { method: "HEAD", mode: "cors" },
+          { method: "GET", mode: "no-cors" },
+          { method: "GET", mode: "cors" },
+        ];
+
+        for (const options of methods) {
+          try {
+            const response = await fetchWithTimeout(url, options);
+            if (response && (response.ok || response.type === "opaque")) {
+              return true;
+            }
+          } catch (error) {
+            continue;
+          }
+        }
+
+        return false;
+      }
+
+      function updateBanner(status, message, subtitle) {
+        const banner = document.getElementById("globalBanner");
+        const icon = banner.querySelector(".status-icon");
+        const title = banner.querySelector(".banner-title");
+        const subtitleEl = banner.querySelector(".banner-subtitle");
+
+        banner.className = `status-banner ${status}`;
+        title.textContent = message;
+        subtitleEl.textContent = subtitle;
+
+        const icons = {
+          pending: '<div class="spinner"></div>',
+          up: '<svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg>',
+          down: '<svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>',
+        };
+
+        icon.innerHTML = icons[status];
+      }
+
+      async function runChecks() {
+        const components = Array.from(document.querySelectorAll(".component"));
+        let allOperational = true;
+        let checkedCount = 0;
+
+        updateBanner(
+          "pending",
+          "Running Diagnostics",
+          "Checking all services and assets..."
+        );
+
+        const checkPromises = components.map(async (component) => {
+          const url = component.getAttribute("data-url");
+          const badge = component.querySelector(".status-badge");
+
+          try {
+            const isUp = await checkStatus(url);
+            checkedCount++;
+
+            if (isUp) {
+              badge.textContent = "Operational";
+              badge.className = "status-badge up";
+            } else {
+              badge.textContent = "Down";
+              badge.className = "status-badge down";
+              allOperational = false;
+            }
+          } catch (error) {
+            badge.textContent = "Error";
+            badge.className = "status-badge down";
+            allOperational = false;
+          }
+
+          updateBanner(
+            "pending",
+            "Running Diagnostics",
+            `Checked ${checkedCount}/${components.length} services...`
+          );
+        });
+
+        await Promise.all(checkPromises);
+
+        if (allOperational) {
+          updateBanner(
+            "up",
+            "All Systems Operational",
+            "Everything is running smoothly"
+          );
+        } else {
+          updateBanner(
+            "down",
+            "Service Issues Detected",
+            "Some services are experiencing problems"
+          );
+        }
+      }
+
+      document.addEventListener("DOMContentLoaded", () => {
+        runChecks();
+        setInterval(runChecks, CHECK_INTERVAL);
+      });
+    </script>
   </body>
 </html>
