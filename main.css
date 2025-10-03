@@ -62,7 +62,7 @@ h1 {
 
 .social-links {
   display: grid;
-  grid-template-columns: repeat(4, 1fr);
+  grid-template-columns: repeat(3, 1fr);
   grid-gap: 15px;
   pointer-events: auto;
 }
