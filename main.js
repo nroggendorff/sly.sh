@@ -72,6 +72,10 @@ loader.load("assets/box.glb", (gltf) => {
 });
 
 let isLinkHovered = false;
+let isClicked = false;
+let clickReleaseTime = null;
+const TRANSITION_DURATION = 3000;
+
 let mousePosition = new THREE.Vector3(0, 0, 1);
 let globalDirection = new THREE.Vector3(0, 0, 1);
 let isWindowFocused = true;
@@ -83,6 +87,8 @@ const resetCubes = () => {
   mousePosition.set(0, 0, 1);
   globalDirection.set(0, 0, 1);
   isLinkHovered = false;
+  isClicked = false;
+  clickReleaseTime = null;
 };
 
 const handleWindowFocus = (isFocused) => {
@@ -104,7 +110,14 @@ function updateMousePosition(event) {
   const x = (event.clientX / window.innerWidth) * 2 - 1;
   const y = -(event.clientY / window.innerHeight) * 2 + 1;
 
-  mousePosition.set(x * 20, y * 20, 1);
+  const vec = new THREE.Vector3(x, y, 0.5);
+  vec.unproject(camera);
+
+  const dir = vec.sub(camera.position).normalize();
+  const distance = -camera.position.z / dir.z;
+  const pos = camera.position.clone().add(dir.multiplyScalar(distance));
+
+  mousePosition.copy(pos);
 
   globalDirection.set(x * 3, y * 3, 1).normalize();
 }
@@ -120,18 +133,31 @@ document.querySelectorAll(".social-links a").forEach((link) => {
   link.addEventListener("mouseleave", () => handleLinkHover(false));
 });
 
+document.addEventListener("mousedown", (event) => {
+  isClicked = true;
+  clickReleaseTime = null;
+  updateMousePosition(event);
+});
+
+document.addEventListener("mouseup", () => {
+  if (isClicked) {
+    isClicked = false;
+    clickReleaseTime = Date.now();
+  }
+});
+
 document.addEventListener("mousemove", (event) => {
   if (!isWindowFocused) return;
 
   updateMousePosition(event);
 
-  if (isLinkHovered) {
+  if (isClicked || isLinkHovered) {
     cubes.forEach((cube) => {
       const direction = new THREE.Vector3();
       direction.subVectors(mousePosition, cube.mesh.position).normalize();
       cube.targetRotation.copy(direction);
     });
-  } else {
+  } else if (clickReleaseTime === null) {
     cubes.forEach((cube) => {
       cube.targetRotation.copy(globalDirection);
     });
@@ -155,14 +181,32 @@ function updateCubes() {
   const forwardVector = new THREE.Vector3(0, 0, 1);
 
   cubes.forEach((cube) => {
-    const shouldReset = !isMouseInWindow || !isWindowFocused;
-    cube.targetRotation = shouldReset
-      ? new THREE.Vector3(0, 0, 1)
-      : isLinkHovered
-      ? new THREE.Vector3()
+    let targetRotation;
+
+    if (clickReleaseTime !== null) {
+      const elapsed = Date.now() - clickReleaseTime;
+      if (elapsed < TRANSITION_DURATION) {
+        const t = elapsed / TRANSITION_DURATION;
+        const easeT = t * t * (3 - 2 * t);
+        const clickDirection = new THREE.Vector3()
           .subVectors(mousePosition, cube.mesh.position)
-          .normalize()
-      : globalDirection;
+          .normalize();
+        targetRotation = new THREE.Vector3().lerpVectors(
+          clickDirection,
+          globalDirection,
+          easeT,
+        );
+      } else {
+        clickReleaseTime = null;
+        targetRotation = globalDirection;
+      }
+      cube.targetRotation.copy(targetRotation);
+    }
+
+    const shouldReset = !isMouseInWindow || !isWindowFocused;
+    if (shouldReset) {
+      cube.targetRotation = new THREE.Vector3(0, 0, 1);
+    }
 
     cube.currentRotation.lerp(cube.targetRotation, cube.speed);
     cube.mesh.lookAt(cube.mesh.position.clone().add(cube.currentRotation));
