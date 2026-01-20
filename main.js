@@ -74,12 +74,14 @@ loader.load("assets/box.glb", (gltf) => {
 let isLinkHovered = false;
 let isClicked = false;
 let clickReleaseTime = null;
+let releasePosition = new THREE.Vector3(0, 0, 1);
 const TRANSITION_DURATION = 3000;
 
 let mousePosition = new THREE.Vector3(0, 0, 1);
 let globalDirection = new THREE.Vector3(0, 0, 1);
 let isWindowFocused = true;
 let isMouseInWindow = true;
+let lastMouseEvent = null;
 
 const resetCubes = () => {
   targetFOV = idleFOV;
@@ -107,6 +109,14 @@ document.addEventListener("mouseleave", () => handleMouseInWindow(false));
 document.addEventListener("mouseenter", () => handleMouseInWindow(true));
 
 function updateMousePosition(event) {
+  lastMouseEvent = event;
+
+  const socialLinks = document.querySelector(".social-links");
+  const linksRect = socialLinks ? socialLinks.getBoundingClientRect() : null;
+  const linksY = linksRect
+    ? (linksRect.top + linksRect.bottom) / 2
+    : window.innerHeight / 2;
+
   const x = (event.clientX / window.innerWidth) * 2 - 1;
   const y = -(event.clientY / window.innerHeight) * 2 + 1;
 
@@ -119,7 +129,16 @@ function updateMousePosition(event) {
 
   mousePosition.copy(pos);
 
-  globalDirection.set(x * 3, y * 3, 1).normalize();
+  const adjustedY = event.clientY - linksY;
+  const normalizedY = -(adjustedY / window.innerHeight) * 2;
+
+  globalDirection.set(x * 3, normalizedY * 3, 1).normalize();
+}
+
+function recalculateMousePosition() {
+  if (lastMouseEvent && (isClicked || isLinkHovered)) {
+    updateMousePosition(lastMouseEvent);
+  }
 }
 
 const handleLinkHover = (isEntering) => {
@@ -143,6 +162,7 @@ document.addEventListener("mouseup", () => {
   if (isClicked) {
     isClicked = false;
     clickReleaseTime = Date.now();
+    releasePosition.copy(mousePosition);
   }
 });
 
@@ -151,13 +171,17 @@ document.addEventListener("mousemove", (event) => {
 
   updateMousePosition(event);
 
+  if (clickReleaseTime !== null) {
+    return;
+  }
+
   if (isClicked || isLinkHovered) {
     cubes.forEach((cube) => {
       const direction = new THREE.Vector3();
       direction.subVectors(mousePosition, cube.mesh.position).normalize();
       cube.targetRotation.copy(direction);
     });
-  } else if (clickReleaseTime === null) {
+  } else {
     cubes.forEach((cube) => {
       cube.targetRotation.copy(globalDirection);
     });
@@ -189,18 +213,18 @@ function updateCubes() {
         const t = elapsed / TRANSITION_DURATION;
         const easeT = t * t * (3 - 2 * t);
         const clickDirection = new THREE.Vector3()
-          .subVectors(mousePosition, cube.mesh.position)
+          .subVectors(releasePosition, cube.mesh.position)
           .normalize();
         targetRotation = new THREE.Vector3().lerpVectors(
           clickDirection,
           globalDirection,
           easeT,
         );
+        cube.targetRotation.copy(targetRotation);
       } else {
         clickReleaseTime = null;
-        targetRotation = globalDirection;
+        cube.targetRotation.copy(globalDirection);
       }
-      cube.targetRotation.copy(targetRotation);
     }
 
     const shouldReset = !isMouseInWindow || !isWindowFocused;
@@ -225,6 +249,7 @@ function animate() {
   camera.fov += (targetFOV - camera.fov) * transitionSpeed;
   camera.updateProjectionMatrix();
 
+  recalculateMousePosition();
   updateCubes();
 
   renderer.setClearColor(0xffffff, 0);
