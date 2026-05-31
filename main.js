@@ -16,7 +16,7 @@ let targetFOV = idleFOV;
 let targetZ = idleZ;
 
 const ZOOM_IN_SPEED = 0.035;
-const ZOOM_OUT_SPEED = 0.022;
+const ZOOM_OUT_SPEED = 0.005;
 const MAX_ANGULAR_STEP = 0.2;
 const TRANSITION_DURATION = 3000;
 const SHOCKWAVE_DURATION = 1000;

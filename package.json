@@ -17,7 +17,7 @@
   "dependencies": {
     "gh-pages": "^6.3.0",
     "glob": "^13.0.6",
-    "three": "^0.172.0"
+    "three": "^0.184.0"
   },
   "devDependencies": {
     "vite": "^6.0.7"
