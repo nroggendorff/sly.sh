@@ -288,7 +288,15 @@ function updateCubes() {
 function animate() {
   requestAnimationFrame(animate);
   const zoomingIn = targetZ < camera.position.z;
-  const speed = zoomingIn ? ZOOM_IN_SPEED : ZOOM_OUT_SPEED;
+  let speed = zoomingIn ? ZOOM_IN_SPEED : ZOOM_OUT_SPEED;
+
+  if (!zoomingIn) {
+    const distRemaining = camera.position.z - targetZ;
+    const maxDist = idleZ - 14;
+    const progress = Math.max(0, Math.min(1, 1 - distRemaining / maxDist));
+    speed = ZOOM_OUT_SPEED * (1 + progress * progress * 8);
+  }
+
   camera.position.z += (targetZ - camera.position.z) * speed;
   camera.fov += (targetFOV - camera.fov) * speed;
   camera.updateProjectionMatrix();
