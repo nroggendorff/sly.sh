@@ -69,8 +69,8 @@
       <p><strong>Page not found</strong></p>
 
       <p>
-        The page you requested doesn't exist, was moved, or wandered into the
-        lost woods on its own.
+        The page you requested doesn't exist, was moved, or
+        <span id="cause"></span>.
       </p>
 
       <div id="suggestions">
@@ -82,5 +82,64 @@
         <img width="32" height="32" src="/assets/favicon.png" alt="sly.sh" />
       </a>
     </div>
+
+    <script>
+      const messages = [
+        "got lost in the Master Sword trials",
+        "wandered into the lost woods",
+        "ran off chasing a Cucco",
+        "was hit by a lynel on Master Mode",
+        "entered the Queen Gibdo fight without any elemental fruit",
+        "decided to play Age of Calamity on {maintained Nintendo Switch emulator}",
+        "fell through the Shrine of Resurrection",
+        "exited the paraglider with moon jump active",
+        "wanted to import MainField into Blender",
+        "started an argument with Hestu about shit inflation",
+        "mistook a Lynel for a horseback merchant from afar and is now suffering the consequences",
+        "went straight to the Depths from GSI",
+        "attempted to reverse engineer Sheikah tech and accidentally invented bugs",
+        "is in a panic blood moon loop",
+        "was eaten by a Like Like",
+        "tried to pet a dog in Breath of the Wild",
+        "said yes to a Yiga clan recruiter",
+        "{insert BCML loading text}",
+        "glitched into Lorule",
+        "started assembling a Zonai device requiring a component lacking snap points with OCD",
+        "took a wrong turn in Deepnest",
+        "forgot to equip the compass item",
+        "is still waiting for the Citadel elevator to start",
+        "started a competing Smoothie business to satisfy a grudge held since Minish Cap",
+        "felt bad for Loam",
+        "dedicated itself to beating NKG",
+        "dedicated itself to finding all the hidden areas in Greenpath",
+        "sat on the bench immediately outside of the Underworks just to listen to Choral Chambers' music",
+        "picked up a rupoor without any money to begin with",
+        "pissed off Oshiro",
+        "pirated the Mirror Temple B-Side",
+        "was tricked by the Einsam phantom",
+        "trusted in the one percent chance that the mimic detector was wrong",
+        "was consumed by Fun Gus",
+        "got lost in the kindergarten below Homeworld",
+        "crash landed on the Jungle Moon",
+        "wandered into the Nightosphere",
+        "was picked up by the Dungeon Train",
+        "tried to document the Nightosphere bureaucracy and was immediately audited by demons",
+        "started a logical argument with LSP",
+        "pirated the Enchiridion",
+        "was eaten by an anglerfish",
+        "flew straight to the Interloper",
+        "accidentally pressed the same dialogue option five times in a row",
+        "started watching a geometry nodes tutorial",
+        'came up with a "great alternative to staff notation" that\'s actually just a complicated piano roll',
+        "decided to start working on self-attention optimization",
+        "solved the Collatz conjecture, and is still trying to prove it",
+        "started working on an alternative to V-Sync",
+      ];
+
+      const el = document.getElementById("cause");
+      if (el) {
+        el.textContent = messages[Math.floor(Math.random() * messages.length)];
+      }
+    </script>
   </body>
 </html>
