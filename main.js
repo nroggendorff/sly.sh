@@ -12,12 +12,16 @@ camera.position.z = 50;
 
 const idleZ = 70;
 const idleFOV = 30;
+const hoverZ = 14;
+const hoverFOV = 75;
 let targetFOV = idleFOV;
 let targetZ = idleZ;
 
-const ZOOM_IN_SPEED = 0.035;
-const ZOOM_OUT_SPEED = 0.005;
-const MAX_ANGULAR_STEP = 0.2;
+const ZOOM_IN_RATE = 2.15;
+const ZOOM_OUT_RATE = 0.6;
+const MAX_ANGULAR_SPEED = 6.0;
+const MAX_DELTA = 0.05;
+const HOVER_EXIT_GRACE = 80;
 const TRANSITION_DURATION = 3000;
 const SHOCKWAVE_DURATION = 1000;
 const SHOCKWAVE_TRAVEL = 80;
@@ -60,7 +64,7 @@ loader.load("assets/box.glb", (gltf) => {
       mesh,
       cur: new THREE.Vector3(0, 0, 1),
       tgt: new THREE.Vector3(0, 0, 1),
-      speed: 0.05 + (i / (gridRows * gridCols)) * 0.1,
+      speed: 3.1 + (i / (gridRows * gridCols)) * 6.7,
     });
   }
 });
@@ -80,6 +84,8 @@ let shockActive = false;
 let shockStartTime = null;
 let shockOrigin = new THREE.Vector3();
 let shadowLevel = 1.0;
+let hoverExitTimer = null;
+let lastFrame = performance.now();
 
 const containerEl = document.querySelector(".container");
 const socialLinksEl = document.querySelector(".social-links");
@@ -113,7 +119,15 @@ function refreshMouse() {
   globalDir.copy(gDir);
 }
 
+function endHover() {
+  if (hoverExitTimer !== null) {
+    clearTimeout(hoverExitTimer);
+    hoverExitTimer = null;
+  }
+}
+
 function resetAll() {
+  endHover();
   targetFOV = idleFOV;
   targetZ = idleZ;
   mousePos.set(0, 0, 1);
@@ -140,14 +154,19 @@ document.addEventListener("mouseenter", () => {
 
 document.querySelectorAll(".social-links a").forEach((a) => {
   a.addEventListener("mouseenter", () => {
+    endHover();
     isLinkHovered = true;
-    targetFOV = 75;
-    targetZ = 14;
+    targetFOV = hoverFOV;
+    targetZ = hoverZ;
   });
   a.addEventListener("mouseleave", () => {
-    isLinkHovered = false;
-    targetFOV = idleFOV;
-    targetZ = idleZ;
+    endHover();
+    hoverExitTimer = setTimeout(() => {
+      hoverExitTimer = null;
+      isLinkHovered = false;
+      targetFOV = idleFOV;
+      targetZ = idleZ;
+    }, HOVER_EXIT_GRACE);
   });
 });
 
@@ -190,17 +209,23 @@ window.addEventListener("resize", () => {
   renderer.setSize(window.innerWidth, window.innerHeight);
 });
 
-function stepToward(cur, tgt, speed, maxStep) {
-  const diff = new THREE.Vector3().subVectors(tgt, cur);
-  const len = diff.length();
-  if (len < 0.0001) return;
-  const step = Math.min(len * speed, maxStep);
-  diff.normalize();
-  cur.addScaledVector(diff, step);
+const stepAxis = new THREE.Vector3();
+
+function stepToward(cur, tgt, speed, dt) {
+  const angle = cur.angleTo(tgt);
+  if (angle < 0.0001) return;
+  const eased = angle * (1 - Math.exp(-speed * dt));
+  const step = Math.min(eased, MAX_ANGULAR_SPEED * dt);
+  stepAxis.crossVectors(cur, tgt);
+  if (stepAxis.lengthSq() < 1e-12) {
+    stepAxis.set(-cur.y, cur.x, 0);
+    if (stepAxis.lengthSq() < 1e-12) stepAxis.set(1, 0, 0);
+  }
+  cur.applyAxisAngle(stepAxis.normalize(), step);
   cur.normalize();
 }
 
-function updateCubes() {
+function updateCubes(dt) {
   refreshMouse();
   const scale =
     (Math.tan((camera.fov * Math.PI) / 360) * camera.position.z) / 15;
@@ -232,7 +257,7 @@ function updateCubes() {
           outDir.normalize();
           c.tgt.copy(outDir);
         } else {
-          c.tgt.lerp(globalDir, 0.04);
+          c.tgt.lerp(globalDir, 1 - Math.exp(-2.45 * dt));
           c.tgt.normalize();
         }
       }
@@ -262,7 +287,7 @@ function updateCubes() {
       c.tgt.copy(globalDir);
     }
 
-    stepToward(c.cur, c.tgt, c.speed, MAX_ANGULAR_STEP);
+    stepToward(c.cur, c.tgt, c.speed, dt);
     c.mesh.lookAt(c.mesh.position.clone().add(c.cur));
 
     const angle = c.cur.angleTo(fwd);
@@ -276,7 +301,7 @@ function updateCubes() {
   }
 
   if (shadowLevel < 1.0) {
-    shadowLevel = Math.min(1.0, shadowLevel + 0.012);
+    shadowLevel = Math.min(1.0, shadowLevel + 0.72 * dt);
     const blur = shadowLevel * 25;
     const opacity = shadowLevel * 0.1;
     containerEl.style.boxShadow = `0 10px ${blur}px rgba(0, 0, 0, ${opacity})`;
@@ -285,26 +310,29 @@ function updateCubes() {
   }
 }
 
-function animate() {
+function animate(now) {
   requestAnimationFrame(animate);
+  const dt = Math.min(MAX_DELTA, (now - lastFrame) / 1000);
+  lastFrame = now;
+
   const zoomingIn = targetZ < camera.position.z;
-  let speed = zoomingIn ? ZOOM_IN_SPEED : ZOOM_OUT_SPEED;
+  let rate = zoomingIn ? ZOOM_IN_RATE : ZOOM_OUT_RATE;
 
   if (!zoomingIn) {
-    const distRemaining = camera.position.z - targetZ;
-    const maxDist = idleZ - 14;
-    const progress = Math.max(0, Math.min(1, 1 - distRemaining / maxDist));
-    speed = ZOOM_OUT_SPEED * (1 + progress * progress * 8);
+    const travelled = (camera.position.z - hoverZ) / (idleZ - hoverZ);
+    const progress = Math.max(0, Math.min(1, travelled));
+    rate = ZOOM_OUT_RATE * (1 + progress * progress * 8);
   }
 
-  camera.position.z += (targetZ - camera.position.z) * speed;
-  camera.fov += (targetFOV - camera.fov) * speed;
+  const zoomStep = 1 - Math.exp(-rate * dt);
+  camera.position.z += (targetZ - camera.position.z) * zoomStep;
+  camera.fov += (targetFOV - camera.fov) * zoomStep;
   camera.updateProjectionMatrix();
 
-  updateCubes();
+  updateCubes(dt);
 
   renderer.setClearColor(0xffffff, 0);
   renderer.render(scene, camera);
 }
 
-animate();
+requestAnimationFrame(animate);
