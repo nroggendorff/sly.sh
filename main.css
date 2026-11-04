@@ -45,7 +45,9 @@ canvas {
   object-fit: cover;
   object-position: center;
   margin-bottom: 15px;
-  box-shadow: 0 0 0 4px white, 0 0 0 6px gray;
+  box-shadow:
+    0 0 0 4px white,
+    0 0 0 6px gray;
 }
 
 h1 {
@@ -84,13 +86,31 @@ h1 {
   transform: scale(1.1);
 }
 
-.social-links a:hover img {
+.social-links a:hover .icon {
   filter: brightness(0) invert(1);
 }
 
-.social-links img {
+.social-links .icon {
+  display: block;
   width: 30px;
   height: 30px;
   transition: all 0.3s ease;
   border-radius: 50%;
+  background:
+    url("assets/user.png") center / cover,
+    var(--brand);
+  background-blend-mode: multiply;
+  mask: url("assets/user.png") center / cover;
+}
+
+.icon.github {
+  --brand: #101411;
+}
+
+.icon.huggingface {
+  --brand: #ffd21e;
+}
+
+.icon.bluesky {
+  --brand: #0560ff;
 }
